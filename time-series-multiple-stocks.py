@@ -1,10 +1,15 @@
 import pandas as pd
 
 arrayOfSymbols = ["AAPL","FB","GOOG"]
-token = "pk_ea365ed7ba2a49deb6404cd426913ac7"
+import os
+
+token = os.getenv("IEX_API_TOKEN")
+if not token:
+    raise ValueError("IEX_API_TOKEN environment variable not set")
 historicalStockPrices = pd.DataFrame()
 
 for x in arrayOfSymbols:
-    historicalStockPrices[x] = pd.read_json('https://cloud.iexapis.com/stable/stock/'+x+'/chart/1y?token='+token+'')["close"]   
+    historicalStockPrices[x] = pd.read_json('https://cloud.iexapis.com/stable/stock/'+x+
+                                            '/chart/1y?token='+token+'')["close"]   
 
-historicalStockPrices.head(5)    
+historicalStockPrices.head(5)

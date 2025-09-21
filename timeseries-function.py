@@ -1,37 +1,32 @@
-from iexfinance.stocks import Stock 
-from datetime import datetime, timedelta 
-import numpy as np 
-from iexfinance.stocks import get_historical_data
-import pandas as pd 
-import matplotlib.pyplot as plt 
-import matplotlib.dates as mdates
 
-plt.rcParams['figure.figsize'] = (20,8)
+import yfinance as yf
+from datetime import datetime
 
-import seaborn as sns;
-sns.set(font_scale = 1.5)
-sns.set_style("whitegrid")
+tickerSymbol = input("Ticker Symbol: ").strip()
 
-tickerSymbol = input("Ticker Symbol: ")
-companyInfo = Stock(tickerSymbol)
-stockPrice = companyInfo.get_price()
+ticker = yf.Ticker(tickerSymbol)
+stockPrice = ticker.history(period="1d")['Close'].iloc[-1]
+print(f"Current Stock Price: {stockPrice}")
 
-print("Current Stock Price: ",stockPrice)
+print(f"View Historical Information for the Current Stock {tickerSymbol}:")
+sy, sm, sd = map(int, input("input start date as yyyy,m,d: ").split(','))
+ey, em, ed = map(int, input("input end date as yyyy,m,d: ").split(','))
 
-print("View Historical Information for the Current Stock {}:".format(tickerSymbol))
-sy, sm, sd = eval(input("input start date as yyyy,m,d: "))
-ey, em, ed = eval(input("input end date as yyyy,m,d: "))
+start = datetime(sy, sm, sd)
+end = datetime(ey, em, ed)
 
-start = datetime(sy,sm,sd)
-end = datetime(ey,em,ed)
+historicalPrices = ticker.history(start=start, end=end)
 
-historicalPrices = get_historical_date(tickerSymbol, start, end)
-
-stockHistoricals = pd.DataFrame(historicalPrices).T 
-
-startingDate = (sy*10000)+(sm*100)+sd
-endingDate = (ey*10000)+(em*100)+ed
-
-fileName = "HistoricalStockPrices_" + tickerSymbol + "_From_" + str(startingDate) + "_To_" + str(endingDate) + ".xlsx"
-
-stockHistoricals.to_excel(fileName)
+if historicalPrices.empty:
+	print("No historical data found for the given date range.")
+else:
+	# Remove timezone info from index
+	historicalPrices.index = historicalPrices.index.tz_localize(None)
+	startingDate = start.strftime('%Y%m%d')
+	endingDate = end.strftime('%Y%m%d')
+	import os
+	downloads_folder = os.path.expanduser('./downloads')
+	fileName = f"HistoricalStockPrices_{tickerSymbol}_From_{startingDate}_To_{endingDate}.xlsx"
+	filePath = os.path.join(downloads_folder, fileName)
+	historicalPrices.to_excel(filePath)
+	print(f"Historical data saved to {filePath}")
